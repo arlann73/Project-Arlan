@@ -1,0 +1,24 @@
+{
+  "name": "project-1",
+  "version": "1.0.0",
+  "description": "Portfolio website for Prastyo Arlan — Junior Geologist",
+  "main": "index.html",
+  "scripts": {
+    "serve": "http-server -p 3000 -c-1 --silent",
+    "test": "playwright test"
+  },
+  "keywords": [],
+  "author": "Prastyo Arlan",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "playwright": "^1.62.1",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.2.0",
+    "http-server": "^14.1.1"
+  }
+}

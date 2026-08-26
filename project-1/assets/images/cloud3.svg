@@ -1,9 +1,1 @@
-<svg viewBox="0 0 100 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="rgba(255,255,255,1)" />
-      <stop offset="100%" stop-color="#111111" />
-    </linearGradient>
-  </defs>
-  <path d="M 0 35 Q 10 20 25 25 Q 40 10 60 20 Q 80 10 100 30 L 100 50 L 0 50 Z" fill="url(#fade)"/>
-</svg>
+<svg viewBox="0 0 100 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M 0 35 Q 10 20 25 25 Q 40 10 60 20 Q 80 10 100 30 L 100 50 L 0 50 Z" fill="rgba(255,255,255,1)"/></svg>

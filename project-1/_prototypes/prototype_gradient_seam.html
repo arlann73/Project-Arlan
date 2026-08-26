@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROTOTYPE: Gradient Seam</title>
+    <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        /* 
+           PROTOTYPE: Gradient Seam
+           Question: What should the seam between the white cloud wipe and the dark background look like?
+           3 Variants switchable via ?variant=
+           A: SVG linear gradient on the bottom cloud (White to #111111)
+           B: Extra dark cloud layer (#111111) added behind the white clouds
+           C: White background on the content section that fades down to #111111
+        */
+
+        body { margin: 0; background: #000; color: #fff; font-family: 'Helvetica Neue', Arial, sans-serif; overflow-x: hidden; }
+        
+        .hero {
+            position: sticky; top: 0; height: 100vh; width: 100%;
+            display: flex; justify-content: center; align-items: center;
+            background: linear-gradient(135deg, #0a1128 0%, #1c2e4a 100%);
+            z-index: 1; overflow: hidden;
+        }
+        .hero h1 { font-size: 5rem; margin: 0; letter-spacing: 0.1em; font-weight: 700; mix-blend-mode: difference; color: white;}
+
+        .main-content {
+            position: relative;
+            z-index: 10; 
+            margin-top: 100vh; /* Buffer for wipe */
+        }
+
+        /* Default background for A and B */
+        .bg-dark { background-color: #111111; }
+        /* Background for C */
+        .bg-fade { background: linear-gradient(to bottom, #ffffff 0%, #111111 100vh); color: #111111; }
+
+        .cloud-transition-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%;
+            height: 150vh; 
+            transform: translateY(-100%); 
+            pointer-events: none;
+            z-index: 50; 
+        }
+
+        .cloud-layer {
+            position: absolute;
+            width: 150%;
+            left: -25%;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 100% 100%;
+            will-change: transform;
+        }
+
+        .cloud-1 { bottom: 30vh; height: 80vh; background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M 10 25 Q 10 10 30 10 Q 50 10 60 20 Q 80 5 90 20 Q 100 35 85 45 Q 60 55 40 40 Q 10 45 10 25 Z" fill="rgba(255,255,255,0.3)"/></svg>'); filter: blur(3px); z-index: 51; }
+        .cloud-2 { bottom: 10vh; height: 90vh; background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M 5 30 Q 10 15 25 20 Q 40 5 65 15 Q 85 5 95 25 Q 100 45 80 45 Q 50 50 35 40 Q 5 50 5 30 Z" fill="rgba(255,255,255,0.6)"/></svg>'); filter: blur(2px); z-index: 52; }
+        
+        /* Variants for cloud-3 */
+        .cloud-3-solid { bottom: -20vh; height: 100vh; background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M 0 35 Q 10 20 25 25 Q 40 10 60 20 Q 80 10 100 30 L 100 50 L 0 50 Z" fill="rgba(255,255,255,1)"/></svg>'); z-index: 53; }
+        .cloud-3-gradient { bottom: -20vh; height: 100vh; background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,1)"/><stop offset="100%" stop-color="%23111111"/></linearGradient></defs><path d="M 0 35 Q 10 20 25 25 Q 40 10 60 20 Q 80 10 100 30 L 100 50 L 0 50 Z" fill="url(%23fade)"/></svg>'); z-index: 53; }
+        
+        /* Variant B Extra Layer */
+        .cloud-4-dark { bottom: -30vh; height: 110vh; background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M 0 45 Q 10 30 25 35 Q 40 20 60 30 Q 80 20 100 40 L 100 50 L 0 50 Z" fill="%23111111"/></svg>'); z-index: 50; }
+
+        .about-section { min-height: 200vh; padding: 100px 2rem; display: flex; flex-direction: column; align-items: center; }
+
+        /* Floating Switcher */
+        .prototype-switcher {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #222; color: white; padding: 10px 20px; border-radius: 30px;
+            display: flex; align-items: center; gap: 15px; z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-family: monospace;
+        }
+        .prototype-switcher button {
+            background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;
+            padding: 0 10px; opacity: 0.7; transition: opacity 0.2s;
+        }
+        .prototype-switcher button:hover { opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <section class="hero" id="hero">
+        <div class="hero-inner">
+            <h1>PRASTYO ARLAN</h1>
+        </div>
+    </section>
+
+    <!-- Variant A (Gradient) -->
+    <main class="main-content bg-dark" id="variant-A" style="display: none;">
+        <div class="cloud-transition-container">
+            <div class="cloud-layer cloud-1 c1"></div>
+            <div class="cloud-layer cloud-2 c2"></div>
+            <div class="cloud-layer cloud-3-gradient c3"></div>
+        </div>
+        <section class="about-section">
+            <h2>Variant A: SVG Gradient</h2>
+            <p style="color: #ccc;">The lowest cloud fades into the #111111 background via SVG linear-gradient.</p>
+        </section>
+    </main>
+
+    <!-- Variant B (Dark Cloud Layer) -->
+    <main class="main-content bg-dark" id="variant-B" style="display: none;">
+        <div class="cloud-transition-container">
+            <div class="cloud-layer cloud-4-dark c4"></div>
+            <div class="cloud-layer cloud-1 c1"></div>
+            <div class="cloud-layer cloud-2 c2"></div>
+            <div class="cloud-layer cloud-3-solid c3"></div>
+        </div>
+        <section class="about-section">
+            <h2>Variant B: Dark Cloud</h2>
+            <p style="color: #ccc;">An extra #111111 cloud layer sits behind the white clouds.</p>
+        </section>
+    </main>
+
+    <!-- Variant C (White Background Fade) -->
+    <main class="main-content bg-fade" id="variant-C" style="display: none;">
+        <div class="cloud-transition-container">
+            <div class="cloud-layer cloud-1 c1"></div>
+            <div class="cloud-layer cloud-2 c2"></div>
+            <div class="cloud-layer cloud-3-solid c3"></div>
+        </div>
+        <section class="about-section">
+            <h2>Variant C: Background Fade</h2>
+            <p style="color: #555;">The section background starts white and fades to #111111.</p>
+        </section>
+    </main>
+
+    <div class="prototype-switcher">
+        <button id="prev-btn">◀</button>
+        <span id="variant-label">Variant A</span>
+        <button id="next-btn">▶</button>
+    </div>
+
+    <script>
+        const variants = ['A', 'B', 'C'];
+        const labels = {
+            'A': 'A (SVG Gradient)',
+            'B': 'B (Dark Cloud)',
+            'C': 'C (Background Fade)'
+        };
+        
+        // Get variant from URL, default to A
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentVariant = urlParams.get('variant') || 'A';
+        if (!variants.includes(currentVariant)) currentVariant = 'A';
+
+        // Show the active variant
+        document.getElementById('variant-' + currentVariant).style.display = 'block';
+        document.getElementById('variant-label').innerText = labels[currentVariant];
+
+        function switchVariant(dir) {
+            let idx = variants.indexOf(currentVariant);
+            idx = (idx + dir + variants.length) % variants.length;
+            window.location.search = '?variant=' + variants[idx];
+        }
+
+        document.getElementById('prev-btn').addEventListener('click', () => switchVariant(-1));
+        document.getElementById('next-btn').addEventListener('click', () => switchVariant(1));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') switchVariant(-1);
+            if (e.key === 'ArrowRight') switchVariant(1);
+        });
+
+        // Setup GSAP and Lenis
+        const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+
+        gsap.registerPlugin(ScrollTrigger);
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time)=>{ lenis.raf(time * 1000) });
+        gsap.ticker.lagSmoothing(0);
+
+        // GSAP Parallax Animation
+        const cloudTl = gsap.timeline({
+            scrollTrigger: {
+                trigger: "body",
+                start: "top top", 
+                end: "+=100%", 
+                scrub: 1.5 
+            }
+        });
+
+        cloudTl.to(".c1", { y: "-80vh", ease: "power3.out" }, 0)  
+               .to(".c2", { y: "-60vh", ease: "power3.out" }, 0)  
+               .to(".c3", { y: "-30vh", ease: "power3.out" }, 0); 
+        
+        // For variant B, animate the dark cloud too
+        if(currentVariant === 'B') {
+            cloudTl.to(".c4", { y: "-20vh", ease: "power3.out" }, 0);
+        }
+    </script>
+</body>
+</html>

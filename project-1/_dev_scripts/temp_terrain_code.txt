@@ -1,0 +1,172 @@
+function initCinematicTerrain() {
+    const container = document.getElementById('webgl-container');
+    if (!container) return;
+
+    // 1. Scene & Fog
+    const scene = new THREE.Scene();
+    const BG_COLOR = new THREE.Color(0x3a2a1c); // Latar belakang yang lebih terang dan hangat (golden haze)
+    scene.background = BG_COLOR;
+    scene.fog = new THREE.FogExp2(BG_COLOR, 0.00075);
+
+    // 2. Camera — cinematic low angle, looking across the landscape
+    const camera = new THREE.PerspectiveCamera(32, window.innerWidth / window.innerHeight, 1, 12000);
+    camera.position.set(0, 320, 950);
+    camera.lookAt(0, 0, 0);
+
+    // 3. Renderer — disable unused buffers to save memory bandwidth
+    const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: false,
+        powerPreference: 'high-performance',
+        stencil: false,
+        depth: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    // Cap pixel ratio at 1.0 — massive performance boost on retina screens, difference is negligible for terrain
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.0));
+    container.appendChild(renderer.domElement);
+
+    const lightDir = new THREE.Vector3(-1.0, 0.6, 0.2).normalize(); // Cahaya kuat dari kiri atas
+
+    // 4. Load both maps in parallel then build scene
+    const loader = new THREE.TextureLoader();
+    let hLoaded = false, nLoaded = false;
+    let hTex, nTex;
+
+    function onBothLoaded() {
+        hTex.generateMipmaps = false;
+        hTex.minFilter = THREE.LinearFilter;
+        hTex.magFilter = THREE.LinearFilter;
+
+        nTex.generateMipmaps = true;
+        nTex.minFilter = THREE.LinearMipmapLinearFilter;
+        nTex.magFilter = THREE.LinearFilter;
+
+        // OPTIMISATION: 150×187 segments — 75% fewer vertices vs 300x375!
+        // Because we use a precomputed normal map for lighting, we do NOT need high poly count for detail.
+        const geo = new THREE.PlaneGeometry(1400, 1750, 150, 187);
+        geo.rotateX(-Math.PI / 2);
+
+        const mat = new THREE.ShaderMaterial({
+            uniforms: {
+                tHeight: { value: hTex },
+                tNormal: { value: nTex },
+                uDisplace: { value: 300.0 }, // Kurangi ketinggian ekstrem agar proporsional
+                uLightDir: { value: lightDir },
+                uSunColor: { value: new THREE.Color(0xffcc66) }, // Matahari lebih cerah dan golden
+                uSkyColor: { value: new THREE.Color(0x151515) }, // Ambient tidak terlalu hitam pekat
+                fogColor: { value: BG_COLOR.clone() },
+                fogDensity: { value: 0.00075 }
+            },
+
+            vertexShader: `
+                uniform sampler2D tHeight;
+                uniform float uDisplace;
+                varying vec2  vUv;
+                varying float vH;
+                varying vec3  vViewPos;
+                void main() {
+                    vUv = uv;
+                    float h = texture2D(tHeight, uv).r;
+                    vH = h;
+                    vec3 displaced = position + vec3(0.0, h * uDisplace, 0.0);
+                    vec4 mv = modelViewMatrix * vec4(displaced, 1.0);
+                    vViewPos = -mv.xyz;
+                    gl_Position = projectionMatrix * mv;
+                }
+            `,
+
+            fragmentShader: `
+                uniform sampler2D tNormal;
+                uniform vec3  uLightDir;
+                uniform vec3  uSunColor;
+                uniform vec3  uSkyColor;
+                uniform vec3  fogColor;
+                uniform float fogDensity;
+                varying vec2  vUv;
+                varying float vH;
+                varying vec3  vViewPos;
+                void main() {
+                    float ex = smoothstep(0.0, 0.09, vUv.x) * smoothstep(1.0, 0.91, vUv.x);
+                    float ey = smoothstep(0.0, 0.07, vUv.y) * smoothstep(1.0, 0.93, vUv.y);
+                    float alpha = ex * ey;
+                    if (alpha < 0.005) discard;
+                    vec3 n = normalize(texture2D(tNormal, vUv).rgb * 2.0 - 1.0);
+                    // Mengembalikan warna dasar yang lebih terang dan natural
+                    vec3 cSea  = vec3(0.08, 0.09, 0.10);
+                    vec3 cLow  = vec3(0.12, 0.13, 0.14);
+                    vec3 cMid  = vec3(0.28, 0.27, 0.26);
+                    vec3 cPeak = vec3(0.60, 0.58, 0.56);
+                    vec3 albedo = mix(cSea,  cLow,  smoothstep(0.00, 0.05, vH));
+                    albedo      = mix(albedo, cMid,  smoothstep(0.10, 0.40, vH));
+                    albedo      = mix(albedo, cPeak, smoothstep(0.65, 1.00, vH));
+                    
+                    // Diffuse lighting dengan kurva eksponensial agar tebing yang menghadap cahaya menyala terang
+                    float rawSun = max(dot(n, uLightDir), 0.0);
+                    float sun = pow(rawSun, 2.0) * 2.5 + rawSun * 0.5;
+                    
+                    // Specular Highlight (pantulan tajam seperti batu mengkilap)
+                    vec3 fakeView = normalize(vec3(0.0, -1.0, 0.5)); 
+                    vec3 halfVector = normalize(uLightDir + fakeView);
+                    float spec = pow(max(dot(n, halfVector), 0.0), 24.0) * 3.0; 
+                    
+                    // Fill light untuk melembutkan bayangan pekat
+                    float fill = max(dot(n, vec3(-uLightDir.x, 0.5, -uLightDir.z)), 0.0) * 0.15;
+                    
+                    vec3 lit = albedo * (uSkyColor + uSunColor * sun + vec3(0.2, 0.2, 0.25) * fill);
+                    // Tambahkan specular ke hasil akhir
+                    lit += uSunColor * spec * albedo;
+                    
+                    lit *= (1.0 - (1.0 - abs(n.y)) * 0.35);
+                    float fog = 1.0 - exp(-fogDensity * fogDensity * length(vViewPos) * length(vViewPos));
+                    gl_FragColor = vec4(mix(lit, fogColor, fog), alpha);
+                }
+            `,
+
+            transparent: true,
+            depthWrite: true
+        });
+
+        const mesh = new THREE.Mesh(geo, mat);
+        scene.add(mesh);
+
+        // ── CAMERA STATE ───────────────────────────────────────────────────
+        camera.position.set(0, 190, 950);
+        camera.lookAt(0, 20, 0);
+
+        const webglContainer = document.getElementById('webgl-container');
+        webglContainer.style.opacity = '1';
+
+        // ── NATIVE REFRESH RENDER LOOP ─────────────────────────────────────────────
+        let isVisible = true;
+        const heroEl = document.getElementById('hero');
+        if (heroEl && typeof IntersectionObserver !== 'undefined') {
+            const obs = new IntersectionObserver(
+                (entries) => { isVisible = entries[0].isIntersecting; },
+                { threshold: 0.01 }
+            );
+            obs.observe(heroEl);
+        }
+
+        renderer.setAnimationLoop(() => {
+            if (!isVisible) return;
+            renderer.render(scene, camera);
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    }
+
+    loader.load('sumatra_height.png', (t) => {
+        hTex = t; hLoaded = true;
+        if (nLoaded) onBothLoaded();
+    }, undefined, (e) => console.error('Height map failed:', e));
+
+    loader.load('sumatra_normal.png', (t) => {
+        nTex = t; nLoaded = true;
+        if (hLoaded) onBothLoaded();
+    }, undefined, (e) => console.error('Normal map failed:', e));
+}

@@ -1,0 +1,144 @@
+{
+  "color_scheme": "light",
+  "logo": null,
+  "fonts": [
+    {
+      "family": "Ppneuemontreal Book",
+      "role": "body"
+    },
+    {
+      "family": "Ppneuemontreal",
+      "role": "heading"
+    },
+    {
+      "family": "Arial",
+      "role": "unknown"
+    }
+  ],
+  "colors": {
+    "primary": "#D5CFBE",
+    "secondary": "#FFFF23",
+    "accent": "#FFFF23",
+    "background": "#FFFFFF",
+    "textPrimary": "#000000",
+    "link": "#DDDBCB"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Ppneuemontreal Book",
+      "heading": "Ppneuemontreal"
+    },
+    "fontStacks": {
+      "heading": [
+        "Tr 3 A",
+        "Arial",
+        "sans-serif"
+      ],
+      "body": [
+        "Ppneuemontreal Book",
+        "Arial",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "Ppneuemontreal Book",
+        "Arial",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "88px",
+      "h2": "80px",
+      "body": "19.2px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "1px"
+  },
+  "components": {
+    "buttonPrimary": {
+      "background": "#FFFF23",
+      "textColor": "#000000",
+      "borderRadius": "15.936px",
+      "borderRadiusCorners": {
+        "topLeft": "15.936px",
+        "topRight": "15.936px",
+        "bottomRight": "15.936px",
+        "bottomLeft": "15.936px"
+      },
+      "shadow": "none"
+    },
+    "buttonSecondary": {
+      "background": "#EBEADA",
+      "textColor": "#000000",
+      "borderColor": "#BDB8AA",
+      "borderRadius": "15.936px",
+      "borderRadiusCorners": {
+        "topLeft": "15.936px",
+        "topRight": "15.936px",
+        "bottomRight": "15.936px",
+        "bottomLeft": "15.936px"
+      },
+      "shadow": "none"
+    }
+  },
+  "icons": null,
+  "images": {
+    "logo": "https://cdn.prod.website-files.com/691d7c9f14d0280ebe2d4108/69206dcc9ccb58439ffc32dc_happyring.svg",
+    "favicon": "https://cdn.prod.website-files.com/691d7c9f14d0280ebe2d4108/69839f2955d4ddfd746742eb_favicon.png",
+    "ogImage": "https://cdn.prod.website-files.com/691d7c9f14d0280ebe2d4108/6985214bb975f745e43bb088_OpenGraph.jpg",
+    "logoAlt": "Happy Ring"
+  },
+  "animations": null,
+  "layout": null,
+  "tone": null,
+  "personality": {
+    "tone": "modern",
+    "energy": "medium",
+    "targetAudience": "creative professionals"
+  },
+  "__llm_logo_reasoning": {
+    "selectedIndex": 4,
+    "reasoning": "Selected #4 because it is visible, located in the header, and matches the brand name 'NESH' from the page title and URL.",
+    "confidence": 0.85,
+    "source": "llm"
+  },
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 0,
+      "text": "Book a Call",
+      "reasoning": "Button #0 ('Book a Call') is the primary CTA because it uses a vibrant brand color (#FFFF23) and has action-oriented text, making it the most prominent call-to-action."
+    },
+    "secondary": {
+      "index": 4,
+      "text": "Read more",
+      "reasoning": "Button #4 ('Read more') is selected as the secondary button because it has a different background color (#EBEADA) from the primary button, fitting the criteria for a secondary action."
+    },
+    "confidence": 0.95
+  },
+  "designSystem": {
+    "framework": "custom",
+    "componentLibrary": ""
+  },
+  "confidence": {
+    "buttons": 0.95,
+    "colors": 0.9,
+    "overall": 0.925
+  },
+  "__llm_metadata": {
+    "logoSelection": {
+      "llmCalled": true,
+      "llmSucceeded": true,
+      "finalSource": "llm",
+      "rawLogoSelection": {
+        "selectedLogoIndex": 4,
+        "selectedLogoReasoning": "Selected #4 because it is visible, located in the header, and matches the brand name 'NESH' from the page title and URL.",
+        "confidence": 0.85
+      }
+    },
+    "buttonClassification": {
+      "llmCalled": true,
+      "llmSucceeded": true
+    }
+  }
+}

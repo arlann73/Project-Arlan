@@ -1,0 +1,1 @@
+const transformSections = document.querySelectorAll('section');\"\n// and \"const swiper = new Swiper(\"\n\nconst regex = /const transformSections = document\\.querySelectorAll\\('section'\\);[\\s\\S]{1,5000}webgl-container

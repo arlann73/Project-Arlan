@@ -187,8 +187,8 @@ button {
     position: sticky !important;
     top: 0 !important;
     width: 100% !important;
-    height: calc(100vh + 5px) !important;
-    min-height: calc(100vh + 5px) !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
     background: #000 !important;
     display: flex !important;
     flex-direction: column !important;
@@ -210,10 +210,10 @@ button {
     z-index: 10;
     background-color: #111111; /* Cover sticky hero */
     color: var(--text-primary);
-    margin-top: 100vh; /* Allow 100vh gap for the cloud wipe transition over the pinned hero */
+    margin-top: 100vh;
 }
 
-/* ================= CLOUD TRANSITION ================= */
+/* --- Cloud Transition Wipe (Prototype Behavior) --- */
 .cloud-transition-container {
     position: absolute;
     top: 0;
@@ -233,13 +233,14 @@ button {
     background-position: center;
     background-size: 100% 100%;
     will-change: transform; /* Optimizer */
+    transform-origin: center top;
 }
 
 .cloud-1 {
     bottom: 30vh;
     height: 80vh;
     background-image: url('./assets/images/cloud1.svg');
-    filter: blur(3px);
+    filter: blur(8px);
     z-index: 51;
 }
 
@@ -247,7 +248,7 @@ button {
     bottom: 10vh;
     height: 90vh;
     background-image: url('./assets/images/cloud2.svg');
-    filter: blur(2px);
+    filter: blur(4px);
     z-index: 52;
 }
 

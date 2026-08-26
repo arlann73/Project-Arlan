@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROTOTYPE: Hero Transition</title>
+    <!-- Use CDNs for Lenis and GSAP for a standalone prototype -->
+    <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        body { margin: 0; background: #000; color: #fff; font-family: 'Helvetica Neue', Arial, sans-serif; }
+        
+        /* The Navbar */
+        .navbar {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 80px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            z-index: 100; /* Q2: Navbar on top */
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.3s, color 0.3s;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* The Hero */
+        .hero {
+            position: sticky; /* Q1: Sticky behavior */
+            top: 0;
+            height: 100vh;
+            width: 100%;
+            display: flex; justify-content: center; align-items: center;
+            background: linear-gradient(135deg, #0a1128 0%, #1c2e4a 100%);
+            z-index: 1; /* Sits below main content */
+            overflow: hidden;
+            transform-origin: center top;
+        }
+        .hero-inner {
+            text-align: center;
+        }
+        .hero h1 { font-size: 5rem; margin: 0; letter-spacing: 0.1em; font-weight: 700; text-transform: uppercase; }
+        .hero p { font-size: 1.2rem; opacity: 0.7; font-style: italic; }
+
+        /* The Main Content / About Section */
+        .main-content {
+            position: relative;
+            z-index: 10; /* Q3: Higher than hero */
+            background-color: #111111; /* Q3: Opaque background to prevent bleed */
+            box-shadow: 0 -20px 50px rgba(0,0,0,0.7); /* Premium shadow for the curtain edge */
+        }
+
+        .about-section {
+            min-height: 200vh; /* Simulate the long scrollytelling timeline */
+            padding: 80px 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .about-header {
+            font-size: 3rem; font-weight: bold; margin-bottom: 4rem;
+        }
+
+        .timeline-fake {
+            width: 80%;
+            max-width: 800px;
+            height: 150vh;
+            border-left: 2px solid #333;
+            padding-left: 2rem;
+            display: flex; flex-direction: column; justify-content: space-around;
+        }
+        
+        .timeline-card {
+            background: #1a1a1a;
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar" id="nav">
+        <h2 style="margin: 0; font-size: 1.2rem; letter-spacing: 2px;">LOGO (z-index: 100)</h2>
+    </nav>
+
+    <!-- Q1 & Q4: Hero is strictly 100vh, sticky, and its GSAP animation targets the container -->
+    <section class="hero" id="hero">
+        <div class="hero-inner">
+            <h1>PRASTYO ARLAN</h1>
+            <p>Scroll down to see the "Curtain Reveal" transition</p>
+        </div>
+    </section>
+
+    <!-- Q3: Main content with z-index 10 and solid background -->
+    <main class="main-content">
+        <section class="about-section">
+            <h2 class="about-header">ABOUT SECTION</h2>
+            <div class="timeline-fake">
+                <div class="timeline-card">
+                    <h3>Native scrolling</h3>
+                    <p>This area scrolls natively over the sticky Hero.</p>
+                </div>
+                <div class="timeline-card">
+                    <h3>Perfectly stable</h3>
+                    <p>No parallax math means Lenis and ScrollTrigger stay perfectly in sync.</p>
+                </div>
+                <div class="timeline-card">
+                    <h3>No Background Bleed</h3>
+                    <p>The #111111 background masks the Hero section completely.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Init Lenis
+        const lenis = new Lenis({ 
+            duration: 1.2, 
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) 
+        });
+        
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Sync Lenis with GSAP
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time)=>{ lenis.raf(time * 1000) });
+        gsap.ticker.lagSmoothing(0);
+
+        // --- THE PROTOTYPE LOGIC ---
+
+        // Q4: Animation Collision avoided by targeting the #hero container itself during scroll.
+        // As .main-content scrolls up to cover the viewport, we fade and scale the sticky hero.
+        ScrollTrigger.create({
+            trigger: ".main-content",
+            start: "top bottom", // when top of main-content hits bottom of screen
+            end: "top top",      // when top of main-content hits top of screen (fully covering hero)
+            scrub: true,
+            animation: gsap.to("#hero", {
+                opacity: 0.1,
+                scale: 0.95,
+                y: 50, // Slight push down for extra depth
+                ease: "none"
+            })
+        });
+
+        // Q2: Navbar logic demonstration
+        // The navbar color swap triggers based on native scroll position, which still works!
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('nav');
+            const heroHeight = document.getElementById('hero').offsetHeight;
+            if (window.scrollY >= heroHeight - 80) {
+                nav.style.background = '#00e5ff'; // Cyan swap
+                nav.style.color = '#000';
+                nav.querySelector('h2').textContent = 'NAVBAR (Color Swapped)';
+            } else {
+                nav.style.background = 'rgba(255,255,255,0.05)';
+                nav.style.color = '#fff';
+                nav.querySelector('h2').textContent = 'LOGO (z-index: 100)';
+            }
+        });
+
+    </script>
+</body>
+</html>

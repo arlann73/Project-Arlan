@@ -126,6 +126,29 @@ const initApp = (event) => {
         gsap.registerPlugin(ScrollTrigger);
     }
 
+    // --- Lenis Smooth Scroll Initialization & GSAP Sync (P0 Root Cause Fix) ---
+    window.lenis = new Lenis({
+        lerp: 0.0875, // Silky glide, still responsive (frame-rate independent)
+        wheelMultiplier: 1.0,
+        gestureOrientation: 'vertical',
+        smoothWheel: true,
+        syncTouch: false, // Native touch on mobile feels best
+        touchMultiplier: 1.6,
+        infinite: false,
+        autoResize: true
+    });
+
+    const lenis = window.lenis;
+
+    // Connect Lenis with ScrollTrigger
+    if (typeof lenis.on === 'function') {
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time) => {
+            lenis.raf(time * 1000);
+        });
+        gsap.ticker.lagSmoothing(0, 0);
+    }
+
     // --- Premium GSAP Hero Intro Animation ---
     const heroTl = gsap.timeline({
         defaults: { ease: "expo.out" }
@@ -158,58 +181,52 @@ const initApp = (event) => {
             stagger: 0.2
         }, "-=1.0");
 
-    // --- White Cloud Wipe Transition (Accessibility First) ---
+    // --- Hero Recede & White Cloud Wipe Transition (Prototype Parity) ---
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!prefersReducedMotion) {
-        // Hero fades out slightly and scales down
         ScrollTrigger.create({
             trigger: "body",
-            start: "top top", 
-            end: "100vh top",      
+            start: "top top",
+            end: "100vh top",
             scrub: true,
             animation: gsap.to("#hero", { opacity: 0.2, scale: 0.95, ease: "none" })
         });
 
-        const cloudTl = gsap.timeline({
-            scrollTrigger: {
-                trigger: "body",
-                start: "top top", 
-                end: "+=150vh",
-                scrub: 1.5 
-            }
+        let mm = gsap.matchMedia();
+        
+        mm.add({
+            isDesktop: "(min-width: 768px)",
+            isMobile: "(max-width: 767px)"
+        }, (context) => {
+            let { isDesktop } = context.conditions;
+            
+            // Push clouds down below the viewport initially so they are hidden.
+            // Desktop: larger offset (120vh), Mobile: smaller offset (80vh)
+            const initialOffset = isDesktop ? "120vh" : "80vh";
+            gsap.set("#c1, #c2, #c3", { y: initialOffset, willChange: "transform" });
+            
+            const cloudTl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: "#main-content", 
+                    start: "top bottom", 
+                    end: "top top", 
+                    scrub: 1 
+                }
+            });
+
+            // Parallax speeds: to overtake the scroll and cover the Hero,
+            // they must translate UP significantly more than their initial offset.
+            // We use -140vh, -160vh, -180vh to make them race upwards (1.4x, 1.6x, 1.8x total speeds)
+            // This ensures they perfectly wipe the Hero and finish completely ABOVE the About section.
+            cloudTl.to("#c1", { y: `calc(${initialOffset} - 140vh)`, ease: "none" }, 0)
+                   .to("#c2", { y: `calc(${initialOffset} - 160vh)`, ease: "none" }, 0)
+                   .to("#c3", { y: `calc(${initialOffset} - 180vh)`, ease: "none" }, 0);
         });
-
-        // Fast upward parallax for clouds (from top: 100% to far above)
-        cloudTl.to("#c1", { y: "-80vh", ease: "power3.out" }, 0)
-               .to("#c2", { y: "-60vh", ease: "power3.out" }, 0)
-               .to("#c3", { y: "-30vh", ease: "power3.out" }, 0);
     }
-
 
     // Ensure Lenis is available before using it.
     function initializeAllWithLenis() {
-        // Create Lenis instance with optimized parameters for ultra-smooth scrolling
-        window.lenis = new Lenis({
-            lerp: 0.0875, // Silky glide, still responsive (frame-rate independent)
-            wheelMultiplier: 1.0,
-            gestureOrientation: 'vertical',
-            smoothWheel: true,
-            syncTouch: false, // Native touch on mobile feels best
-            touchMultiplier: 1.6,
-            infinite: false,
-            autoResize: true
-        });
-
         const lenis = window.lenis;
-
-        // Connect Lenis with ScrollTrigger if available
-        if (typeof lenis.on === 'function') {
-            lenis.on('scroll', ScrollTrigger.update);
-            gsap.ticker.add((time) => {
-                lenis.raf(time * 1000);
-            });
-            gsap.ticker.lagSmoothing(0, 0);
-        }
 
         // 5. Timeline SVG path dynamic generator and scroll-driven draw
         // --- TRAJECTORY GEOMETRY ENGINE ---
@@ -1344,3 +1361,5 @@ document.addEventListener('DOMContentLoaded', () => {
         lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // For Mobile or negative scrolling
     }, { passive: true });
 });
+
+

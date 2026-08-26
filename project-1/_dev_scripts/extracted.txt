@@ -1,0 +1,56 @@
+Created At: 2026-08-21T05:38:52+07:00
+Completed At: 2026-08-21T05:38:55+07:00
+
+				The command exited with code 0.
+				Output:
+				
+                          navItems.forEach(i => i.classList.remove('is-active'));
+                          sidebarMatch.classList.add('is-active');
+                      }
+                  }
+              });
+          });
+  
+          // 5. Timeline SVG path dynamic generator and draw
+          const timeline = document.querySelector('.timeline');
+          const svg = document.querySelector('.timeline-path-svg');
+>         const curve = document.getElementById('timeline-curve');
+>         const dashedCurve = document.getElementById('timeline-curve-dashed');
+          const tCards = gsap.utils.toArray('.timeline-card');
+  
+          function updateTimelinePath() {
+              if (!timeline || !svg || !curve || tCards.length === 0) return;
+  
+              const svgRect = svg.getBoundingClientRect();
+              const svgW = svg.offsetWidth || svgRect.width;
+              const svgH = svg.offsetHeight || timeline.offsetHeight;
+  
+              svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+  
+              let pathD = '';
+              let lastCenterX = 0;
+              let lastBottomY = 0;
+              const scaleX = svgRect.width > 0 ? (svgW / svgRect.width) : 1;
+  
+              tCards.forEach((card, i) => {
+                  const cardRect = card.getBoundingClientRect();
+                  
+                  // Exact horizontal center normalized by scale factor
+                  const centerX = ((cardRect.left + cardRect.width / 2) - svgRect.left) * scaleX;
+                  const centerY = card.offsetTop + (card.offsetHeight / 2);
+  
+                  lastCenterX = centerX;
+                  lastBottomY = centerY;
+  
+                  if (i === 0) {
+                      const startAboveY = Math.max(0, centerY - 150);
+                      pathD += `M ${centerX} ${startAboveY} L ${centerX} ${centerY}`;
+                  } else {
+                      const prevCard = tCards[i - 1];
+                      const prevRect = prevCard.getBoundingClientRect();
+                      const prevCenterX = ((prevRect.left + prevRect.width / 2) - svgRect.left) * scaleX;
+                      const prevCenterY = prevCard.offsetTop + (prevCard.offsetHeight / 2);
+  
+
+
+

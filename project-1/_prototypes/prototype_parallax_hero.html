@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROTOTYPE: Hero Parallax GSAP Transition</title>
+    <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow-x: hidden; }
+        
+        /* Container to allow scrolling past the sticky hero */
+        .hero-container {
+            height: 300vh; /* Provides 200vh of scroll distance for the parallax to complete */
+            position: relative;
+        }
+
+        .hero {
+            position: sticky; 
+            top: 0; 
+            height: 100vh; 
+            width: 100%;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            background: linear-gradient(135deg, #0a1128 0%, #1c2e4a 100%);
+            z-index: 1; 
+            overflow: hidden;
+        }
+
+        .hero h1 { font-size: 5rem; z-index: 10; font-weight: bold; }
+
+        .parallax-layer {
+            position: absolute;
+            width: 150%;
+            left: -25%;
+            will-change: transform;
+            /* Placeholder styles */
+            border-top-left-radius: 50%;
+            border-top-right-radius: 50%;
+            transform-origin: center top;
+        }
+
+        .layer-back {
+            bottom: 0;
+            height: 100vh;
+            background-color: rgba(255, 255, 255, 0.2);
+            z-index: 2;
+        }
+        
+        .layer-mid {
+            bottom: 0;
+            height: 110vh;
+            background-color: rgba(255, 255, 255, 0.5);
+            z-index: 3;
+        }
+
+        .layer-front {
+            bottom: 0;
+            height: 120vh;
+            background-color: rgba(255, 255, 255, 1);
+            z-index: 4;
+        }
+
+        .about-section {
+            position: relative;
+            z-index: 10;
+            background: #111111;
+            min-height: 200vh;
+            padding: 100px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-container" id="hero-container">
+        <section class="hero" id="hero">
+            <h1>PRASTYO ARLAN</h1>
+            <div class="parallax-layer layer-back" id="p-back"></div>
+            <div class="parallax-layer layer-mid" id="p-mid"></div>
+            <div class="parallax-layer layer-front" id="p-front"></div>
+        </section>
+    </div>
+
+    <section class="about-section">
+        <h2>ABOUT ME SCROLLYTELLING</h2>
+        <p>This section represents the fragile timeline. Parallax must stop here.</p>
+        <div style="height: 500px; border: 1px solid #333; margin-top: 50px;">Card 1</div>
+        <div style="height: 500px; border: 1px solid #333; margin-top: 50px;">Card 2</div>
+    </section>
+
+    <script>
+        // 1. Initialize Lenis for smooth scrolling
+        const lenis = new Lenis({ duration: 1.2 });
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+
+        // 2. Sync GSAP and Lenis
+        gsap.registerPlugin(ScrollTrigger);
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time)=>{ lenis.raf(time * 1000) });
+        gsap.ticker.lagSmoothing(0);
+
+        // 3. User's Baseline Configurations
+        const isMobile = window.innerWidth <= 768;
+        const initialOffset = isMobile ? 680 : 820; // Exact requested offsets
+        const speeds = { back: 0.3, mid: 0.4, front: 0.5 };
+
+        // 4. Set Initial State
+        gsap.set("#p-back", { y: initialOffset });
+        gsap.set("#p-mid", { y: initialOffset });
+        gsap.set("#p-front", { y: initialOffset });
+
+        // 5. Calculate Scroll Distance
+        // The container is 300vh, hero is 100vh sticky. Total scrollable distance for this block is 200vh.
+        const scrollDistance = window.innerHeight * 2; 
+
+        // 6. GSAP Timeline with exact destinations
+        const tl = gsap.timeline({
+            scrollTrigger: {
+                trigger: "#hero-container",
+                start: "top top",
+                end: "bottom top", // Q4: Stops precisely when Hero container leaves viewport
+                scrub: true,
+                markers: true 
+            }
+        });
+
+        // 7. Apply the speed multipliers as destinations (Y-axis inverse relative to scroll)
+        tl.to("#p-back", { y: initialOffset - (scrollDistance * speeds.back), ease: "none" }, 0)
+          .to("#p-mid", { y: initialOffset - (scrollDistance * speeds.mid), ease: "none" }, 0)
+          .to("#p-front", { y: initialOffset - (scrollDistance * speeds.front), ease: "none" }, 0);
+          
+    </script>
+</body>
+</html>
