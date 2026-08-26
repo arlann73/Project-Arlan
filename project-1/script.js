@@ -166,14 +166,14 @@ const initApp = (event) => {
                 trigger: "body",
                 start: "top top", 
                 end: "100vh top", 
-                scrub: 1 
+                scrub: 1.5 
             }
         });
 
         // Fast upward parallax for clouds (from top: 100% to far above)
-        cloudTl.to("#c1", { y: "-150vh", ease: "none" }, 0)
-               .to("#c2", { y: "-180vh", ease: "none" }, 0)
-               .to("#c3", { y: "-120vh", ease: "none" }, 0);
+        cloudTl.to("#c1", { y: "-150vh", ease: "power3.out" }, 0)
+               .to("#c2", { y: "-180vh", ease: "power3.out" }, 0)
+               .to("#c3", { y: "-120vh", ease: "power3.out" }, 0);
     }
 
 
