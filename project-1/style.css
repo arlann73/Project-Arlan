@@ -200,6 +200,8 @@ button {
     box-sizing: border-box !important;
     overflow: hidden !important;
     z-index: 1 !important;
+    transform-origin: center top;
+    will-change: transform, opacity;
 }
 
 /* ================= EDITORIAL NAVBAR ================= */

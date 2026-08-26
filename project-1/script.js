@@ -161,6 +161,15 @@ const initApp = (event) => {
     // --- White Cloud Wipe Transition (Accessibility First) ---
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!prefersReducedMotion) {
+        // Hero fades out slightly and scales down
+        ScrollTrigger.create({
+            trigger: "body",
+            start: "top top", 
+            end: "100vh top",      
+            scrub: true,
+            animation: gsap.to("#hero", { opacity: 0.2, scale: 0.95, ease: "none" })
+        });
+
         const cloudTl = gsap.timeline({
             scrollTrigger: {
                 trigger: "body",
