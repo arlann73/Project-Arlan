@@ -165,7 +165,7 @@ const initApp = (event) => {
             scrollTrigger: {
                 trigger: "body",
                 start: "top top", 
-                end: "+=100%", 
+                end: "+=150vh",
                 scrub: 1.5 
             }
         });
