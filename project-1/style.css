@@ -208,6 +208,7 @@ button {
     z-index: 10;
     background-color: #111111; /* Cover sticky hero */
     color: var(--text-primary);
+    margin-top: 100vh; /* Allow 100vh gap for the cloud wipe transition over the pinned hero */
 }
 
 /* ================= CLOUD TRANSITION ================= */
