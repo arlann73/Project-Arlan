@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROTOTYPE: White Clouds Wipe Transition</title>
+    <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        body { margin: 0; background: #000; color: #fff; font-family: 'Helvetica Neue', Arial, sans-serif; overflow-x: hidden; }
+        
+        .navbar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 80px;
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
+            z-index: 100; display: flex; align-items: center; justify-content: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .hero {
+            position: sticky; top: 0; height: 100vh; width: 100%;
+            display: flex; justify-content: center; align-items: center;
+            background: linear-gradient(135deg, #0a1128 0%, #1c2e4a 100%);
+            z-index: 1; overflow: hidden; transform-origin: center top;
+        }
+        .hero h1 { font-size: 5rem; margin: 0; letter-spacing: 0.1em; font-weight: 700; }
+        .hero p { font-size: 1.2rem; opacity: 0.7; font-style: italic; }
+
+        .main-content {
+            position: relative;
+            z-index: 10; 
+            background-color: #111111;
+            margin-top: 100vh; 
+        }
+
+        /* The cloud container now acts as a sweeping wipe */
+        .cloud-transition-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%;
+            height: 150vh; 
+            /* Overhangs entirely into the hero so it's ready at the bottom edge */
+            transform: translateY(-100%); 
+            pointer-events: none;
+            z-index: 50; 
+        }
+
+        .cloud-layer {
+            position: absolute;
+            width: 150%;
+            left: -25%;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 100% 100%;
+            will-change: transform; /* Research: force compositor thread */
+        }
+
+        /* Layer 1: Highest up, most transparent, reaches the screen first */
+        .cloud-1 {
+            bottom: 30vh;
+            height: 80vh;
+            background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M 10 25 Q 10 10 30 10 Q 50 10 60 20 Q 80 5 90 20 Q 100 35 85 45 Q 60 55 40 40 Q 10 45 10 25 Z" fill="rgba(255,255,255,0.3)"/></svg>');
+            filter: blur(8px);
+            z-index: 51;
+        }
+
+        /* Layer 2: Medium */
+        .cloud-2 {
+            bottom: 10vh;
+            height: 90vh;
+            background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M 5 30 Q 10 15 25 20 Q 40 5 65 15 Q 85 5 95 25 Q 100 45 80 45 Q 50 50 35 40 Q 5 50 5 30 Z" fill="rgba(255,255,255,0.6)"/></svg>');
+            filter: blur(4px);
+            z-index: 52;
+        }
+
+        /* Layer 3: Lowest, solid white */
+        .cloud-3 {
+            bottom: -20vh;
+            height: 100vh;
+            background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M 0 35 Q 10 20 25 25 Q 40 10 60 20 Q 80 10 100 30 L 100 50 L 0 50 Z" fill="rgba(255,255,255,1)"/></svg>');
+            z-index: 53;
+        }
+
+        .about-section {
+            min-height: 200vh;
+            padding: 100px 2rem;
+            display: flex; flex-direction: column; align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar" id="nav">
+        <h2 style="margin: 0; font-size: 1.2rem;">LOGO</h2>
+    </nav>
+
+    <section class="hero" id="hero">
+        <div class="hero-inner">
+            <h1>PRASTYO ARLAN</h1>
+            <p>Scroll down to fly through the white clouds</p>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <div class="cloud-transition-container" id="cloud-container">
+            <div class="cloud-layer cloud-1" id="c1"></div>
+            <div class="cloud-layer cloud-2" id="c2"></div>
+            <div class="cloud-layer cloud-3" id="c3"></div>
+        </div>
+
+        <section class="about-section">
+            <h2 style="font-size: 3rem; margin-bottom: 2rem;">ABOUT SECTION</h2>
+            <div style="width: 80%; max-width: 800px; padding: 2rem; background: #1a1a1a; border-radius: 8px;">
+                <p>The white clouds sweep upwards across the screen, acting as a visual wipe transition. They completely obscure the hard edge between the blue Hero and the #111111 About section.</p>
+                <p>Notice how they start appearing almost as soon as you scroll!</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+
+        gsap.registerPlugin(ScrollTrigger);
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time)=>{ lenis.raf(time * 1000) });
+        gsap.ticker.lagSmoothing(0);
+
+        // Hero fades out slightly (but clouds will mask it anyway)
+        ScrollTrigger.create({
+            trigger: "body",
+            start: "top top", 
+            end: "100vh top",      
+            scrub: true,
+            animation: gsap.to("#hero", { opacity: 0.2, scale: 0.95, ease: "none" })
+        });
+
+        // The Cloud Wipe Animation (Research: Check for reduced motion first!)
+        const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        if (!prefersReducedMotion) {
+            const cloudTl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: "body",
+                    start: "top top", 
+                    end: "100vh top", 
+                    scrub: 1 
+                }
+            });
+
+            // Parallax the clouds UPWARDS. 
+            cloudTl.to("#c1", { y: "-80vh", ease: "none" }, 0)  
+                   .to("#c2", { y: "-60vh", ease: "none" }, 0)  
+                   .to("#c3", { y: "-30vh", ease: "none" }, 0); 
+        }
+
+    </script>
+</body>
+</html>
