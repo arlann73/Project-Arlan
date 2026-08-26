@@ -216,11 +216,10 @@ button {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100vh;
+    height: 150vh;
     transform: translateY(-100%);
     pointer-events: none;
     z-index: 50;
-    overflow: hidden;
 }
 
 .cloud-layer {
@@ -234,25 +233,25 @@ button {
 }
 
 .cloud-1 {
-    top: 100%;
-    height: 70vh;
-    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M 10 25 Q 10 10 30 10 Q 50 10 60 20 Q 80 5 90 20 Q 100 35 85 45 Q 60 55 40 40 Q 10 45 10 25 Z" fill="rgba(255,255,255,0.3)"/></svg>');
+    bottom: 30vh;
+    height: 80vh;
+    background-image: url('./assets/images/cloud1.svg');
     filter: blur(3px);
     z-index: 51;
 }
 
 .cloud-2 {
-    top: 100%;
+    bottom: 10vh;
     height: 90vh;
-    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M 5 30 Q 10 15 25 20 Q 40 5 65 15 Q 85 5 95 25 Q 100 45 80 45 Q 50 50 35 40 Q 5 50 5 30 Z" fill="rgba(255,255,255,0.6)"/></svg>');
+    background-image: url('./assets/images/cloud2.svg');
     filter: blur(2px);
     z-index: 52;
 }
 
 .cloud-3 {
-    top: 100%;
+    bottom: -20vh;
     height: 100vh;
-    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M 0 35 Q 10 20 25 25 Q 40 10 60 20 Q 80 10 100 30 L 100 50 L 0 50 Z" fill="rgba(255,255,255,1)"/></svg>');
+    background-image: url('./assets/images/cloud3.svg');
     z-index: 53;
 }
 
